@@ -315,7 +315,9 @@
 
       <div class="field">
         <label class="field-label">NAMA GURU</label>
-        <input type="text" class="input" id="inpNama" placeholder="Contoh: Asep Saepudin, S.Pd." autocomplete="off">
+        <select class="input" id="inpNama">
+          <option value="">-- Pilih Nama --</option>
+        </select>
       </div>
 
       <div class="field">
@@ -370,13 +372,21 @@
     </div>
 
     <div class="card hidden" id="cardSikapPilih">
-      <div class="section-title">Pilih Mapel &amp; Periode</div>
+      <div class="section-title">Pilih Kelas, Mapel &amp; Periode</div>
       <div class="section-sub">Nilai sikap dihitung per mata pelajaran untuk satu rentang periode (mis. satu bulan).</div>
       <div id="sikapPilihMsg"></div>
 
       <div class="field">
-        <label class="field-label">MAPEL &amp; KELAS</label>
-        <select class="input" id="selSikapSesi"></select>
+        <label class="field-label">KELAS</label>
+        <select class="input" id="selSikapKelas">
+          <option value="">-- Pilih Kelas --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">MATA PELAJARAN</label>
+        <select class="input" id="selSikapMapel">
+          <option value="">-- Pilih Mapel --</option>
+        </select>
       </div>
       <div class="field">
         <label class="field-label">PERIODE MULAI</label>
@@ -441,8 +451,38 @@
    akademik.gs (doGet/doPost), dan pastikan TOKEN sama persis dengan
    konstanta TOKEN di file .gs tersebut.
    ================================================================ */
-const API_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxBtBR6nSEQVGvzAzB5NGm9PPX-ataISiR0mSq9EgASK91CfUm156sb9r_C_v7rVS7sKw/exec';
 const TOKEN = 'SMKSCALM2026';
+
+/* ================================================================
+   DAFTAR MANUAL — isi/ubah daftar di bawah ini sesuai data sekolah
+   Anda. Ini TIDAK diambil otomatis dari spreadsheet, jadi kalau ada
+   guru/kelas/mapel baru, tambahkan langsung di sini lalu simpan ulang.
+
+   - DAFTAR_GURU  : nama harus PERSIS sama dengan nama di tab Pegawai
+                    (dipakai untuk cek PIN & jadwal mengajar).
+   - DAFTAR_KELAS : kode kelas harus PERSIS sama dengan kolom A di
+                    tab Kelas (dipakai untuk memuat daftar siswa).
+   - DAFTAR_MAPEL : { kode, nama } — kode harus PERSIS sama dengan
+                    kode mapel di tab MapelUmum / MapelKonsentrasi.
+   ================================================================ */
+const DAFTAR_GURU = [
+  'Asep Saepudin, S.Pd.',
+  'Nama Guru Kedua',
+  'Nama Guru Ketiga'
+];
+
+const DAFTAR_KELAS = [
+  'X TKJ 1',
+  'X TKJ 2',
+  'XI TKJ 1'
+];
+
+const DAFTAR_MAPEL = [
+  { kode: 'MTK', nama: 'Matematika' },
+  { kode: 'PKN', nama: 'PPKn' },
+  { kode: 'TKJ01', nama: 'Instalasi Jaringan Komputer' }
+];
 
 const STATUS_LIST = ['Hadir', 'Sakit', 'Izin', 'Alpa'];
 
@@ -467,6 +507,31 @@ function tickClock(){
 }
 tickClock();
 setInterval(tickClock, 1000);
+
+/* ---------------- ISI DROPDOWN DARI DAFTAR MANUAL ---------------- */
+function isiDropdownAwal(){
+  const selGuru = document.getElementById('inpNama');
+  DAFTAR_GURU.forEach(nama => {
+    const opt = document.createElement('option');
+    opt.value = nama; opt.textContent = nama;
+    selGuru.appendChild(opt);
+  });
+
+  const selKelas = document.getElementById('selSikapKelas');
+  DAFTAR_KELAS.forEach(kk => {
+    const opt = document.createElement('option');
+    opt.value = kk; opt.textContent = kk;
+    selKelas.appendChild(opt);
+  });
+
+  const selMapel = document.getElementById('selSikapMapel');
+  DAFTAR_MAPEL.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.kode; opt.textContent = m.nama;
+    selMapel.appendChild(opt);
+  });
+}
+isiDropdownAwal();
 
 /* ---------------- HELPERS: API ---------------- */
 async function apiGet(aksi, params){
@@ -693,7 +758,6 @@ function refreshSikapGate(){
   if (state.loggedIn){
     gate.classList.add('hidden');
     pilih.classList.remove('hidden');
-    isiPilihanSesiSikap();
   } else {
     gate.classList.remove('hidden');
     pilih.classList.add('hidden');
@@ -701,47 +765,27 @@ function refreshSikapGate(){
   }
 }
 
-function isiPilihanSesiSikap(){
-  const sel = document.getElementById('selSikapSesi');
-  sel.innerHTML = '';
-  if (!state.jadwal.length){
-    sel.innerHTML = '<option value="">Tidak ada mapel yang diajar hari ini</option>';
-    return;
-  }
-  // Ambil kombinasi kelas+mapel unik dari jadwal hari ini.
-  const unik = [];
-  const seen = new Set();
-  state.jadwal.forEach(j => {
-    const key = `${j.kodeKelas}|${j.kodeMapel}`;
-    if (!seen.has(key)){ seen.add(key); unik.push(j); }
-  });
-  unik.forEach(j => {
-    const opt = document.createElement('option');
-    opt.value = `${j.kodeKelas}|${j.kodeMapel}`;
-    opt.textContent = `${j.kodeKelas} — ${j.namaMapel}`;
-    sel.appendChild(opt);
-  });
-}
-
 document.getElementById('btnMuatSiswaSikap').addEventListener('click', async () => {
-  const sel = document.getElementById('selSikapSesi').value;
+  const kodeKelas = document.getElementById('selSikapKelas').value;
+  const kodeMapel = document.getElementById('selSikapMapel').value;
+  const namaMapelTerpilih = document.getElementById('selSikapMapel').selectedOptions[0]
+    ? document.getElementById('selSikapMapel').selectedOptions[0].textContent : '';
   const mulai = document.getElementById('inpPeriodeMulai').value;
   const selesai = document.getElementById('inpPeriodeSelesai').value;
   clearMsg('sikapPilihMsg');
-  if (!sel){ showMsg('sikapPilihMsg','error','Tidak ada mapel yang bisa dipilih.'); return; }
+  if (!kodeKelas || !kodeMapel){ showMsg('sikapPilihMsg','error','Pilih kelas dan mata pelajaran terlebih dahulu.'); return; }
   if (!mulai || !selesai){ showMsg('sikapPilihMsg','error','Isi periode mulai dan selesai.'); return; }
-  const [kodeKelas, kodeMapel] = sel.split('|');
   showMsg('sikapPilihMsg','loading','Memuat daftar siswa…');
   try{
     const res = await apiGet('daftarSiswaKelas', { kodeKelas });
     if (!res.ok){ showMsg('sikapPilihMsg','error', res.error || 'Gagal memuat siswa.'); return; }
     clearMsg('sikapPilihMsg');
     state.sesiSikap = { kodeKelas, kodeMapel, periodeMulai: mulai, periodeSelesai: selesai,
-      namaMapel: document.getElementById('selSikapSesi').selectedOptions[0].textContent };
+      namaMapel: namaMapelTerpilih };
     state.siswaSikap = res.data.map(s => ({ nis: s.nis, nama: s.nama, nilai: '' }));
     document.getElementById('cardSikapPilih').classList.add('hidden');
     document.getElementById('cardSikapForm').classList.remove('hidden');
-    document.getElementById('sfKelasMapel').textContent = state.sesiSikap.namaMapel;
+    document.getElementById('sfKelasMapel').textContent = `${kodeKelas} — ${state.sesiSikap.namaMapel}`;
     document.getElementById('sfMeta').textContent = `Periode ${mulai} s/d ${selesai}`;
     renderSikapForm();
   }catch(err){
