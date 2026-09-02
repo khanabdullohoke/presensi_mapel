@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presensi Mapel — SMKS Ciledug Al-Musaddadiyah</title>
+<meta name="description" content="Input presensi per sesi mata pelajaran & nilai sikap oleh guru — SMKS Ciledug Al-Musaddadiyah.">
+<meta name="theme-color" content="#0b3d91">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ffb300'/%3E%3Cpath d='M32 14 10 24l22 10 22-10-22-10Z' fill='%230b3d91'/%3E%3Cpath d='M18 29v10c0 4 6 8 14 8s14-4 14-8V29' stroke='%230b3d91' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;600;700&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+<style>
+  :root{
+    --navy:#0b3d91; --navy-deep:#062454; --gold:#ffb300; --gold-deep:#c98600;
+    --ink:#10182b; --muted:#66708a; --faint:#98a2b8;
+    --bg:#f4f6fc; --card:#ffffff; --line:#edf1f9;
+    --ok:#12b76a; --ok-bg:#e7f9f0;
+    --warn:#f79009; --warn-bg:#fef3e2; --warn-deep:#93590a;
+    --info:#2e90fa; --info-bg:#e8f2ff;
+    --err:#f04438;  --err-bg:#feecec;
+    --neutral:#66708a; --neutral-bg:#eef1f8;
+    --font-display:'Sora',system-ui,sans-serif;
+    --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--font-body);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);}
+
+  header{
+    position:relative;overflow:hidden;
+    background:linear-gradient(160deg,var(--navy) 0%,var(--navy-deep) 100%);color:#fff;padding:22px 18px 18px;
+    box-shadow:0 2px 0 var(--gold),0 18px 40px rgba(6,36,84,0.28);
+  }
+  header::before{
+    content:'';position:absolute;inset:0;pointer-events:none;opacity:.07;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.1'%3E%3Ccircle cx='21' cy='21' r='15'/%3E%3Ccircle cx='63' cy='21' r='15'/%3E%3Ccircle cx='21' cy='63' r='15'/%3E%3Ccircle cx='63' cy='63' r='15'/%3E%3Ccircle cx='42' cy='42' r='15'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:84px 84px;
+  }
+  header > *{position:relative;z-index:1;}
+  .brand{display:flex;align-items:center;gap:13px;max-width:640px;margin:0 auto;padding-bottom:12px;flex-wrap:wrap;}
+  .brand .logo{width:44px;height:44px;border-radius:12px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--navy);font-weight:900;flex-shrink:0;box-shadow:0 6px 16px rgba(255,179,0,0.35);}
+  .brand-text{flex:1;min-width:0;}
+  .brand h1{font-size:15.5px;margin:0;line-height:1.3;font-weight:700;}
+  .brand .yayasan{font-size:10px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:1px;}
+  .brand span{font-size:11px;color:#b9c8ec;}
+  .brand-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .chip-guru{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);
+    color:#e6ecff;font-size:11.5px;font-weight:700;padding:7px 13px;border-radius:999px;
+  }
+  .btn-keluar{
+    padding:7px 13px;border-radius:999px;border:1px solid rgba(255,255,255,0.25);
+    background:rgba(255,255,255,0.08);color:#fff;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  .btn-keluar:hover{background:rgba(255,255,255,0.18);}
+  .header-controls{max-width:640px;margin:0 auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .header-controls input[type="date"]{padding:9px 14px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--navy);background:#fff;border:none;font-family:inherit;}
+  .header-controls button{padding:9px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .header-controls button:hover{background:rgba(255,255,255,0.18);}
+  .header-controls button.hari-ini{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+  main{max-width:640px;margin:0 auto;padding:20px 18px 60px;}
+
+  .panel{
+    background:var(--card);border-radius:20px;padding:20px;
+    box-shadow:0 1px 2px rgba(11,61,145,0.05),0 14px 32px -8px rgba(11,61,145,0.10);border:1px solid var(--line);margin-bottom:16px;
+  }
+  .panel-head{margin-bottom:14px;}
+  .panel-head h3{font-size:14.5px;margin:0;color:var(--navy);font-weight:800;}
+  .panel-head p{margin:2px 0 0;font-size:11.5px;color:var(--faint);}
+
+  label.field-label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin:0 0 5px;}
+  input[type="text"], input[type="password"], input[type="number"], input[type="date"]{
+    width:100%;padding:11px 13px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:14px;font-family:inherit;background:#f8faff;color:var(--ink);
+  }
+  input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 4px rgba(11,61,145,0.10);}
+  .field{margin-bottom:14px;}
+
+  .btn-primary{
+    width:100%;padding:13px 18px;border:none;border-radius:12px;
+    background:linear-gradient(135deg,var(--navy) 0%,#1650b8 100%);color:#fff;
+    font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;
+  }
+  .btn-primary:disabled{opacity:.55;cursor:default;}
+  .btn-secondary{
+    padding:10px 16px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+    color:var(--navy);font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;
+  }
+  .btn-secondary:hover{background:var(--bg);}
+  .btn-ghost-kecil{
+    padding:6px 11px;border-radius:999px;border:1.5px solid var(--line);background:#fff;
+    color:var(--muted);font-weight:700;font-size:11px;cursor:pointer;font-family:inherit;
+  }
+
+  .pesan{font-size:13px;padding:12px 14px;border-radius:12px;margin-top:12px;line-height:1.5;}
+  .pesan.err{background:var(--err-bg);color:#8a2e24;}
+  .pesan.ok{background:var(--ok-bg);color:#0a7a49;}
+  .muat{text-align:center;color:var(--muted);font-size:13px;padding:30px 0;}
+  .muat-spin{width:24px;height:24px;margin:0 auto 10px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ===== Login ===== */
+  .login-wrap{max-width:400px;margin:30px auto 0;}
+  .login-logo{width:56px;height:56px;border-radius:16px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--navy);font-weight:900;margin:0 auto 14px;box-shadow:0 8px 20px rgba(255,179,0,0.35);}
+  .login-wrap h2{text-align:center;font-size:18px;color:var(--navy);margin:0 0 4px;}
+  .login-wrap p.sub{text-align:center;font-size:12px;color:var(--muted);margin:0 0 20px;}
+
+  /* ===== Jadwal list ===== */
+  .jadwal-item{
+    display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid var(--line);
+    border-radius:14px;margin-bottom:10px;cursor:pointer;background:#fff;transition:border-color .15s;
+  }
+  .jadwal-item:hover{border-color:var(--navy);}
+  .jadwal-item:last-child{margin-bottom:0;}
+  .jadwal-jam{
+    flex-shrink:0;width:48px;height:48px;border-radius:12px;background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .jadwal-jam b{font-size:15px;color:var(--navy);font-family:var(--font-display);line-height:1;}
+  .jadwal-jam span{font-size:8.5px;color:var(--faint);font-weight:700;text-transform:uppercase;}
+  .jadwal-info{flex:1;min-width:0;}
+  .jadwal-info .mapel{font-size:13.5px;font-weight:700;color:var(--ink);}
+  .jadwal-info .kelas{font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .badge-status{flex-shrink:0;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;}
+  .badge-status.belum{background:var(--warn-bg);color:var(--warn-deep);}
+  .badge-status.selesai{background:var(--ok-bg);color:var(--ok);}
+  .kosong{text-align:center;color:var(--faint);font-size:12.5px;padding:26px 10px;}
+
+  /* ===== Sesi view ===== */
+  .sesi-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .sesi-head h2{font-size:16.5px;margin:0 0 2px;color:var(--navy);}
+  .sesi-head p{margin:0;font-size:12px;color:var(--muted);}
+  .btn-kembali{
+    flex-shrink:0;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);
+    background:#fff;color:var(--navy);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+
+  .tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--bg);padding:4px;border-radius:12px;}
+  .tab-btn{flex:1;padding:9px 6px;border:none;border-radius:9px;background:transparent;color:var(--muted);
+    font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;}
+  .tab-btn.active{background:#fff;color:var(--navy);box-shadow:0 2px 6px rgba(11,61,145,0.12);}
+
+  .ringkas-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+  .ringkas-chip{border-radius:12px;padding:9px 6px;text-align:center;border:1.5px solid var(--line);}
+  .ringkas-chip .n{font-size:17px;font-weight:800;font-family:var(--font-display);}
+  .ringkas-chip .l{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;}
+  .ringkas-chip.Hadir .n{color:var(--ok);} .ringkas-chip.Sakit .n{color:var(--warn-deep);}
+  .ringkas-chip.Izin .n{color:var(--info);} .ringkas-chip.Alpa .n{color:var(--err);}
+
+  .aksi-massal{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+
+  .cari-siswa{margin-bottom:12px;}
+
+  .siswa-row{
+    display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line);
+  }
+  .siswa-row:last-child{border-bottom:none;}
+  .siswa-nama{flex:1;min-width:0;}
+  .siswa-nama b{font-size:13px;color:var(--ink);display:block;line-height:1.3;}
+  .siswa-nama span{font-size:10.5px;color:var(--faint);}
+  .status-grup{display:flex;gap:4px;flex-shrink:0;}
+  .status-btn{
+    width:32px;height:32px;border-radius:9px;border:1.5px solid var(--line);background:#fff;
+    font-size:11.5px;font-weight:800;color:var(--faint);cursor:pointer;font-family:var(--font-display);
+  }
+  .status-btn.Hadir.active{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .status-btn.Sakit.active{background:var(--warn);border-color:var(--warn);color:#fff;}
+  .status-btn.Izin.active{background:var(--info);border-color:var(--info);color:#fff;}
+  .status-btn.Alpa.active{background:var(--err);border-color:var(--err);color:#fff;}
+  .keterangan-row{padding:0 4px 10px;margin-top:-8px;}
+  .keterangan-row input{font-size:12px;padding:8px 11px;}
+
+  .nilai-row{
+    display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);
+  }
+  .nilai-row:last-child{border-bottom:none;}
+  .nilai-row input{width:64px;text-align:center;padding:8px 6px;flex-shrink:0;}
+  .nilai-set-cepat{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .nilai-set-cepat input{width:70px;flex-shrink:0;}
+
+  .footer-note{font-size:11px;color:var(--faint);text-align:center;margin-top:6px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">🎓</div>
+    <div class="brand-text">
+      <span class="yayasan">Yayasan Al-Musaddadiyah</span>
+      <h1>Presensi Mapel</h1>
+      <span>SMKS Ciledug Al-Musaddadiyah</span>
+    </div>
+    <div class="brand-right" id="brandRight" style="display:none;">
+      <span class="chip-guru" id="chipNamaGuru">-</span>
+      <button class="btn-keluar" onclick="keluar()">Keluar</button>
+    </div>
+  </div>
+  <div class="header-controls" id="headerControls" style="display:none;">
+    <input type="date" id="inTanggalJadwal">
+    <button class="hari-ini" onclick="setHariIniJadwal()">Hari ini</button>
+    <button onclick="muatJadwal()">Tampilkan</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ LOGIN ============ -->
+  <div id="viewLogin">
+    <div class="login-wrap">
+      <div class="login-logo">🎓</div>
+      <h2>Masuk sebagai Guru</h2>
+      <p class="sub">Isi nama sesuai data pegawai &amp; PIN Anda untuk mulai mengisi presensi</p>
+      <div class="panel">
+        <div class="field">
+          <label class="field-label">Nama Guru</label>
+          <input type="text" id="inNamaGuru" placeholder="Contoh: Ahmad Fauzi, S.Pd." autocomplete="name">
+        </div>
+        <div class="field">
+          <label class="field-label">PIN</label>
+          <input type="password" id="inPinGuru" placeholder="PIN Anda" inputmode="numeric" autocomplete="current-password">
+        </div>
+        <button class="btn-primary" id="btnMasuk" onclick="doLogin()">Masuk</button>
+        <div id="pesanLogin"></div>
+      </div>
+      <p class="footer-note">PIN hanya disimpan selama sesi peramban ini terbuka dan tidak dikirim ke pihak lain selain server sekolah.</p>
+    </div>
+  </div>
+
+  <!-- ============ JADWAL HARI INI ============ -->
+  <div id="viewJadwal" style="display:none;">
+    <div class="panel-head" style="margin-bottom:12px;">
+      <h3 id="judulJadwal">Jadwal Mengajar</h3>
+      <p id="subJudulJadwal">Memuat...</p>
+    </div>
+    <div class="panel">
+      <div id="isiJadwal">
+        <div class="muat"><div class="muat-spin"></div>Memuat jadwal...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SESI: PRESENSI + NILAI SIKAP ============ -->
+  <div id="viewSesi" style="display:none;">
+    <div class="sesi-head">
+      <div>
+        <h2 id="sesiJudulMapel">-</h2>
+        <p id="sesiSubInfo">-</p>
+      </div>
+      <button class="btn-kembali" onclick="kembaliKeJadwal()">← Jadwal</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tabBtnPresensi" onclick="pindahTab('presensi')">Presensi</button>
+      <button class="tab-btn" id="tabBtnNilai" onclick="pindahTab('nilai')">Nilai Sikap</button>
+    </div>
+
+    <div id="muatSiswa" class="muat"><div class="muat-spin"></div>Memuat daftar siswa...</div>
+
+    <!-- TAB PRESENSI -->
+    <div id="tabPresensi" style="display:none;">
+      <div class="ringkas-row">
+        <div class="ringkas-chip Hadir"><div class="n" id="ringkasHadir">0</div><div class="l">Hadir</div></div>
+        <div class="ringkas-chip Sakit"><div class="n" id="ringkasSakit">0</div><div class="l">Sakit</div></div>
+        <div class="ringkas-chip Izin"><div class="n" id="ringkasIzin">0</div><div class="l">Izin</div></div>
+        <div class="ringkas-chip Alpa"><div class="n" id="ringkasAlpa">0</div><div class="l">Alpa</div></div>
+      </div>
+      <div class="aksi-massal">
+        <button class="btn-ghost-kecil" onclick="tandaiSemua('Hadir')">Semua Hadir</button>
+        <button class="btn-ghost-kecil" onclick="tandaiSemua('Alpa')">Semua Alpa</button>
+      </div>
+      <div class="panel">
+        <div class="cari-siswa">
+          <input type="text" id="inCariSiswaPresensi" placeholder="Cari nama siswa..." oninput="renderPresensi()">
+        </div>
+        <div id="daftarPresensi"></div>
+      </div>
+      <button class="btn-primary" id="btnSimpanPresensi" onclick="simpanPresensi()">Simpan Presensi</button>
+      <div id="pesanPresensi"></div>
+    </div>
+
+    <!-- TAB NILAI SIKAP -->
+    <div id="tabNilai" style="display:none;">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Periode Penilaian</h3>
+          <p>Nilai sikap berlaku untuk satu periode (mis. bulanan) — menyimpan ulang di periode yang sama akan menimpa nilai lama, bukan menduplikasi.</p>
+        </div>
+        <div class="field" style="display:flex;gap:10px;">
+          <div style="flex:1;">
+            <label class="field-label">Dari</label>
+            <input type="date" id="inPeriodeMulai">
+          </div>
+          <div style="flex:1;">
+            <label class="field-label">Sampai</label>
+            <input type="date" id="inPeriodeSelesai">
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Nilai per Siswa</h3>
+          <p>Skala 0–100, mengikuti kategori Gabungan Kemampuan yang berlaku di sekolah</p>
+        </div>
+        <div class="nilai-set-cepat">
+          <input type="number" id="inNilaiCepat" min="0" max="100" placeholder="80">
+          <button class="btn-ghost-kecil" onclick="isiNilaiCepat()">Isi semua siswa</button>
+        </div>
+        <div class="cari-siswa">
+          <input type="text" id="inCariSiswaNilai" placeholder="Cari nama siswa..." oninput="renderNilai()">
+        </div>
+        <div id="daftarNilai"></div>
+      </div>
+      <button class="btn-primary" id="btnSimpanNilai" onclick="simpanNilai()">Simpan Nilai Sikap</button>
+      <div id="pesanNilai"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// GANTI sesuai deployment Web App Apps Script Anda (SAMA dengan yang
+// dipakai rekap_publik_siswa.html & index__36_.html).
+const API_URL = 'GANTI_DENGAN_URL_WEB_APP_ANDA';
+const TOKEN = 'SMKSCALM2026';
+
+// ------------------------------------------------------------
+// ASUMSI ROUTING — samakan dengan switch aksi nyata di Code.gs Anda
+// (lihat juga catatan di atas fungsi verifikasiGuru() pada Akademik.gs):
+//   POST aksi=verifikasiGuru          -> verifikasiGuru(namaGuru, pin)
+//   GET  aksi=jadwalGuruHariIni       -> getJadwalGuruHariIni(namaGuru, tanggal)
+//   GET  aksi=daftarSiswaKelas        -> getDaftarSiswaUntukPresensi(kodeKelas)
+//   POST aksi=submitPresensiSesiMapel -> submitPresensiSesiMapel(body)
+//   POST aksi=submitNilaiSikap        -> submitNilaiSikap(body)
+// POST dikirim dengan Content-Type: text/plain supaya Apps Script Web
+// App tidak kena preflight CORS (praktik umum GAS) — server tetap
+// JSON.parse(e.postData.contents) seperti biasa.
+// ------------------------------------------------------------
+
+async function apiGet(aksi, params){
+  const qs = new URLSearchParams(Object.assign({ token: TOKEN, aksi }, params || {}));
+  const res = await fetch(`${API_URL}?${qs.toString()}`);
+  return res.json();
+}
+async function apiPost(aksi, body){
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ token: TOKEN, aksi }, body || {}))
+  });
+  return res.json();
+}
+
+// ============ SESI (sessionStorage — PIN tidak disimpan permanen) ============
+function getSesi(){
+  try { return JSON.parse(sessionStorage.getItem('calm_guru_sesi') || 'null'); }
+  catch(e){ return null; }
+}
+function setSesi(namaGuru, pin){
+  sessionStorage.setItem('calm_guru_sesi', JSON.stringify({ namaGuru, pin }));
+  localStorage.setItem('calm_guru_nama_terakhir', namaGuru); // hanya nama, untuk prefill — bukan PIN
+}
+function keluar(){
+  sessionStorage.removeItem('calm_guru_sesi');
+  tampilkanView('login');
+}
+
+// ============ NAVIGASI VIEW ============
+function tampilkanView(nama){
+  document.getElementById('viewLogin').style.display = nama === 'login' ? 'block' : 'none';
+  document.getElementById('viewJadwal').style.display = nama === 'jadwal' ? 'block' : 'none';
+  document.getElementById('viewSesi').style.display = nama === 'sesi' ? 'block' : 'none';
+  document.getElementById('headerControls').style.display = nama === 'login' ? 'none' : 'flex';
+  document.getElementById('brandRight').style.display = nama === 'login' ? 'none' : 'flex';
+}
+
+// ============ LOGIN ============
+async function doLogin(){
+  const namaGuru = document.getElementById('inNamaGuru').value.trim();
+  const pin = document.getElementById('inPinGuru').value.trim();
+  const pesanEl = document.getElementById('pesanLogin');
+  pesanEl.innerHTML = '';
+
+  if (!namaGuru || !pin){
+    pesanEl.innerHTML = '<div class="pesan err">Isi nama guru dan PIN.</div>';
+    return;
+  }
+
+  document.getElementById('btnMasuk').disabled = true;
+  pesanEl.innerHTML = '<div class="muat" style="padding:10px 0;">Memeriksa...</div>';
+
+  try {
+    const json = await apiPost('verifikasiGuru', { namaGuru, pin });
+    if (!json.ok){
+      pesanEl.innerHTML = `<div class="pesan err">${json.error}</div>`;
+      return;
+    }
+    setSesi(json.namaGuru || namaGuru, pin);
+    pesanEl.innerHTML = '';
+    document.getElementById('chipNamaGuru').textContent = json.namaGuru || namaGuru;
+    document.getElementById('inTanggalJadwal').valueAsDate = new Date();
+    tampilkanView('jadwal');
+    muatJadwal();
+  } catch(e){
+    pesanEl.innerHTML = '<div class="pesan err">Gagal terhubung ke server. Cek koneksi &amp; coba lagi.</div>';
+  } finally {
+    document.getElementById('btnMasuk').disabled = false;
+  }
+}
+
+// ============ JADWAL HARI INI ============
+let jadwalSaatIni = [];
+
+function setHariIniJadwal(){
+  document.getElementById('inTanggalJadwal').valueAsDate = new Date();
+  muatJadwal();
+}
+
+async function muatJadwal(){
+  const sesi = getSesi();
+  if (!sesi){ tampilkanView('login'); return; }
+  const tanggal = document.getElementById('inTanggalJadwal').value;
+  const isiEl = document.getElementById('isiJadwal');
+  isiEl.innerHTML = '<div class="muat"><div class="muat-spin"></div>Memuat jadwal...</div>';
+
+  try {
+    const json = await apiGet('jadwalGuruHariIni', { namaGuru: sesi.namaGuru, tanggal });
+    if (!json.ok && !json.data){
+      isiEl.innerHTML = `<div class="pesan err">${json.error || 'Gagal memuat jadwal.'}</div>`;
+      return;
+    }
+    const data = json.data || json;
+    jadwalSaatIni = data.jadwal || [];
+    document.getElementById('judulJadwal').textContent = `Jadwal ${data.hari || ''}`;
+    document.getElementById('subJudulJadwal').textContent = formatTanggalIndo(data.tanggal || tanggal);
+    renderJadwal();
+  } catch(e){
+    isiEl.innerHTML = '<div class="pesan err">Gagal memuat data. Cek koneksi.</div>';
+  }
+}
+
+function renderJadwal(){
+  const isiEl = document.getElementById('isiJadwal');
+  if (!jadwalSaatIni.length){
+    isiEl.innerHTML = '<div class="kosong">Tidak ada jadwal mengajar pada tanggal ini.</div>';
+    return;
+  }
+  isiEl.innerHTML = '';
+  jadwalSaatIni.forEach((j, idx) => {
+    const div = document.createElement('div');
+    div.className = 'jadwal-item';
+    div.onclick = () => pilihSesi(idx);
+    div.innerHTML = `
+      <div class="jadwal-jam"><b>${j.jamKe}</b><span>Jam ke</span></div>
+      <div class="jadwal-info">
+        <div class="mapel">${j.namaMapel}</div>
+        <div class="kelas">Kelas ${j.kodeKelas} · ${j.jumlahJp} JP</div>
+      </div>
+      <div class="badge-status ${j.sudahDiisi ? 'selesai' : 'belum'}">${j.sudahDiisi ? 'Sudah diisi' : 'Belum diisi'}</div>
+    `;
+    isiEl.appendChild(div);
+  });
+}
+
+// ============ SESI: MUAT SISWA ============
+let sesiAktif = null;      // item jadwal yang sedang dibuka
+let daftarSiswaSesi = [];  // [{nis, nama}]
+let statusPresensi = {};   // nis -> {status, keterangan}
+let nilaiSikap = {};       // nis -> nilai (string, bisa kosong)
+
+async function pilihSesi(idx){
+  sesiAktif = jadwalSaatIni[idx];
+  tampilkanView('sesi');
+  document.getElementById('sesiJudulMapel').textContent = sesiAktif.namaMapel;
+  document.getElementById('sesiSubInfo').textContent =
+    `Kelas ${sesiAktif.kodeKelas} · Jam ke-${sesiAktif.jamKe} · ${sesiAktif.jumlahJp} JP`;
+
+  document.getElementById('muatSiswa').style.display = 'block';
+  document.getElementById('tabPresensi').style.display = 'none';
+  document.getElementById('tabNilai').style.display = 'none';
+  pindahTab('presensi');
+
+  const sesi = getSesi();
+  try {
+    const json = await apiGet('daftarSiswaKelas', { kodeKelas: sesiAktif.kodeKelas });
+    daftarSiswaSesi = (json.data || json.siswa || json) || [];
+    if (!Array.isArray(daftarSiswaSesi)) daftarSiswaSesi = [];
+
+    statusPresensi = {};
+    nilaiSikap = {};
+    daftarSiswaSesi.forEach(s => {
+      statusPresensi[s.nis] = { status: 'Hadir', keterangan: '' };
+      nilaiSikap[s.nis] = '';
+    });
+
+    // Periode nilai sikap default: awal bulan ini s/d hari ini.
+    const now = new Date();
+    const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
+    document.getElementById('inPeriodeMulai').valueAsDate = awalBulan;
+    document.getElementById('inPeriodeSelesai').valueAsDate = now;
+
+    document.getElementById('muatSiswa').style.display = 'none';
+    document.getElementById('tabPresensi').style.display = 'block';
+    renderPresensi();
+    renderNilai();
+  } catch(e){
+    document.getElementById('muatSiswa').innerHTML = '<div class="pesan err">Gagal memuat daftar siswa. Cek koneksi.</div>';
+  }
+}
+
+function kembaliKeJadwal(){
+  sesiAktif = null;
+  tampilkanView('jadwal');
+  muatJadwal();
+}
+
+function pindahTab(nama){
+  document.getElementById('tabBtnPresensi').classList.toggle('active', nama === 'presensi');
+  document.getElementById('tabBtnNilai').classList.toggle('active', nama === 'nilai');
+  if (document.getElementById('muatSiswa').style.display === 'none'){
+    document.getElementById('tabPresensi').style.display = nama === 'presensi' ? 'block' : 'none';
+    document.getElementById('tabNilai').style.display = nama === 'nilai' ? 'block' : 'none';
+  }
+}
+
+// ============ TAB PRESENSI ============
+function renderPresensi(){
+  const cari = (document.getElementById('inCariSiswaPresensi').value || '').toLowerCase().trim();
+  const cont = document.getElementById('daftarPresensi');
+  cont.innerHTML = '';
+  const daftar = daftarSiswaSesi.filter(s => !cari || s.nama.toLowerCase().includes(cari));
+
+  if (!daftar.length){
+    cont.innerHTML = '<div class="kosong">Tidak ada siswa yang cocok.</div>';
+  }
+
+  daftar.forEach(s => {
+    const st = statusPresensi[s.nis];
+    const row = document.createElement('div');
+    row.className = 'siswa-row';
+    row.innerHTML = `
+      <div class="siswa-nama"><b>${s.nama}</b><span>NIS ${s.nis}</span></div>
+      <div class="status-grup">
+        ${['Hadir','Sakit','Izin','Alpa'].map(opsi => `
+          <button type="button" class="status-btn ${opsi} ${st.status===opsi?'active':''}"
+            onclick="setStatus('${s.nis}','${opsi}')">${opsi.charAt(0)}</button>
+        `).join('')}
+      </div>
+    `;
+    cont.appendChild(row);
+
+    if (st.status !== 'Hadir'){
+      const ket = document.createElement('div');
+      ket.className = 'keterangan-row';
+      ket.innerHTML = `<input type="text" placeholder="Keterangan (opsional)" value="${st.keterangan || ''}"
+        oninput="statusPresensi['${s.nis}'].keterangan = this.value">`;
+      cont.appendChild(ket);
+    }
+  });
+
+  perbaruiRingkasPresensi();
+}
+
+function setStatus(nis, status){
+  statusPresensi[nis].status = status;
+  renderPresensi();
+}
+
+function tandaiSemua(status){
+  daftarSiswaSesi.forEach(s => { statusPresensi[s.nis].status = status; });
+  renderPresensi();
+}
+
+function perbaruiRingkasPresensi(){
+  const hitung = { Hadir:0, Sakit:0, Izin:0, Alpa:0 };
+  Object.values(statusPresensi).forEach(s => { hitung[s.status] = (hitung[s.status]||0) + 1; });
+  document.getElementById('ringkasHadir').textContent = hitung.Hadir;
+  document.getElementById('ringkasSakit').textContent = hitung.Sakit;
+  document.getElementById('ringkasIzin').textContent = hitung.Izin;
+  document.getElementById('ringkasAlpa').textContent = hitung.Alpa;
+}
+
+async function simpanPresensi(){
+  const sesi = getSesi();
+  const pesanEl = document.getElementById('pesanPresensi');
+  pesanEl.innerHTML = '';
+  const tanggal = document.getElementById('inTanggalJadwal').value;
+
+  const daftarStatus = daftarSiswaSesi.map(s => ({
+    nis: s.nis,
+    status: statusPresensi[s.nis].status,
+    keterangan: statusPresensi[s.nis].keterangan || ''
+  }));
+
+  document.getElementById('btnSimpanPresensi').disabled = true;
+  pesanEl.innerHTML = '<div class="muat" style="padding:8px 0;">Menyimpan...</div>';
+
+  try {
+    const json = await apiPost('submitPresensiSesiMapel', {
+      namaGuru: sesi.namaGuru, pin: sesi.pin,
+      jadwalId: sesiAktif.id, kodeKelas: sesiAktif.kodeKelas, kodeMapel: sesiAktif.kodeMapel,
+      jumlahJp: sesiAktif.jumlahJp, tanggal, daftarStatus
+    });
+    if (!json.ok){
+      pesanEl.innerHTML = `<div class="pesan err">${json.error}</div>`;
+      return;
+    }
+    pesanEl.innerHTML = `<div class="pesan ok">${json.message || 'Presensi tersimpan.'}</div>`;
+    sesiAktif.sudahDiisi = true;
+  } catch(e){
+    pesanEl.innerHTML = '<div class="pesan err">Gagal menyimpan. Cek koneksi &amp; coba lagi.</div>';
+  } finally {
+    document.getElementById('btnSimpanPresensi').disabled = false;
+  }
+}
+
+// ============ TAB NILAI SIKAP ============
+function renderNilai(){
+  const cari = (document.getElementById('inCariSiswaNilai').value || '').toLowerCase().trim();
+  const cont = document.getElementById('daftarNilai');
+  cont.innerHTML = '';
+  const daftar = daftarSiswaSesi.filter(s => !cari || s.nama.toLowerCase().includes(cari));
+
+  if (!daftar.length){
+    cont.innerHTML = '<div class="kosong">Tidak ada siswa yang cocok.</div>';
+    return;
+  }
+
+  daftar.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'nilai-row';
+    row.innerHTML = `
+      <div class="siswa-nama"><b>${s.nama}</b><span>NIS ${s.nis}</span></div>
+      <input type="number" min="0" max="100" placeholder="-" value="${nilaiSikap[s.nis] || ''}"
+        oninput="nilaiSikap['${s.nis}'] = this.value">
+    `;
+    cont.appendChild(row);
+  });
+}
+
+function isiNilaiCepat(){
+  const v = document.getElementById('inNilaiCepat').value;
+  if (v === '') return;
+  daftarSiswaSesi.forEach(s => { nilaiSikap[s.nis] = v; });
+  renderNilai();
+}
+
+async function simpanNilai(){
+  const sesi = getSesi();
+  const pesanEl = document.getElementById('pesanNilai');
+  pesanEl.innerHTML = '';
+  const periodeMulai = document.getElementById('inPeriodeMulai').value;
+  const periodeSelesai = document.getElementById('inPeriodeSelesai').value;
+
+  if (!periodeMulai || !periodeSelesai){
+    pesanEl.innerHTML = '<div class="pesan err">Isi periode mulai dan selesai.</div>';
+    return;
+  }
+
+  const daftarNilai = daftarSiswaSesi
+    .filter(s => nilaiSikap[s.nis] !== '' && nilaiSikap[s.nis] !== undefined)
+    .map(s => ({ nis: s.nis, nilai: Number(nilaiSikap[s.nis]) }));
+
+  if (!daftarNilai.length){
+    pesanEl.innerHTML = '<div class="pesan err">Isi nilai minimal untuk satu siswa.</div>';
+    return;
+  }
+
+  document.getElementById('btnSimpanNilai').disabled = true;
+  pesanEl.innerHTML = '<div class="muat" style="padding:8px 0;">Menyimpan...</div>';
+
+  try {
+    const json = await apiPost('submitNilaiSikap', {
+      namaGuru: sesi.namaGuru, pin: sesi.pin,
+      kodeMapel: sesiAktif.kodeMapel, periodeMulai, periodeSelesai, daftarNilai
+    });
+    if (!json.ok){
+      pesanEl.innerHTML = `<div class="pesan err">${json.error}</div>`;
+      return;
+    }
+    pesanEl.innerHTML = `<div class="pesan ok">${json.message || 'Nilai sikap tersimpan.'}</div>`;
+  } catch(e){
+    pesanEl.innerHTML = '<div class="pesan err">Gagal menyimpan. Cek koneksi &amp; coba lagi.</div>';
+  } finally {
+    document.getElementById('btnSimpanNilai').disabled = false;
+  }
+}
+
+// ============ UTIL ============
+function formatTanggalIndo(tglStr){
+  if (!tglStr) return '';
+  const [y,m,d] = tglStr.split('-').map(Number);
+  const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  return `${d} ${bulan[m-1]} ${y}`;
+}
+
+// ============ INIT ============
+(function init(){
+  const namaTerakhir = localStorage.getItem('calm_guru_nama_terakhir');
+  if (namaTerakhir) document.getElementById('inNamaGuru').value = namaTerakhir;
+
+  const sesi = getSesi();
+  if (sesi){
+    document.getElementById('chipNamaGuru').textContent = sesi.namaGuru;
+    document.getElementById('inTanggalJadwal').valueAsDate = new Date();
+    tampilkanView('jadwal');
+    muatJadwal();
+  } else {
+    tampilkanView('login');
+  }
+})();
+</script>
+
+</body>
+</html>
