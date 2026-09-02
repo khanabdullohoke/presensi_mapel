@@ -385,7 +385,7 @@
       <div class="field">
         <label class="field-label">MATA PELAJARAN</label>
         <select class="input" id="selSikapMapel">
-          <option value="">-- Pilih Mapel --</option>
+          <option value="">-- Pilih Kelas dulu --</option>
         </select>
       </div>
       <div class="field">
@@ -455,34 +455,12 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbxBtBR6nSEQVGvzAzB5NGm9
 const TOKEN = 'SMKSCALM2026';
 
 /* ================================================================
-   DAFTAR MANUAL — isi/ubah daftar di bawah ini sesuai data sekolah
-   Anda. Ini TIDAK diambil otomatis dari spreadsheet, jadi kalau ada
-   guru/kelas/mapel baru, tambahkan langsung di sini lalu simpan ulang.
-
-   - DAFTAR_GURU  : nama harus PERSIS sama dengan nama di tab Pegawai
-                    (dipakai untuk cek PIN & jadwal mengajar).
-   - DAFTAR_KELAS : kode kelas harus PERSIS sama dengan kolom A di
-                    tab Kelas (dipakai untuk memuat daftar siswa).
-   - DAFTAR_MAPEL : { kode, nama } — kode harus PERSIS sama dengan
-                    kode mapel di tab MapelUmum / MapelKonsentrasi.
+   Daftar nama guru, kode kelas, dan mapel TIDAK ditulis manual di
+   sini — semuanya diambil langsung dari spreadsheet lewat aksi
+   'daftarGuru', 'daftarKelas', 'daftarMapelKelas' (lihat fungsi
+   isiDropdownAwal & muatMapelUntukKelasSikap di bawah). Pastikan
+   3 fungsi itu sudah ditambahkan ke file .gs Anda.
    ================================================================ */
-const DAFTAR_GURU = [
-  'Asep Saepudin, S.Pd.',
-  'Nama Guru Kedua',
-  'Nama Guru Ketiga'
-];
-
-const DAFTAR_KELAS = [
-  'X TKJ 1',
-  'X TKJ 2',
-  'XI TKJ 1'
-];
-
-const DAFTAR_MAPEL = [
-  { kode: 'MTK', nama: 'Matematika' },
-  { kode: 'PKN', nama: 'PPKn' },
-  { kode: 'TKJ01', nama: 'Instalasi Jaringan Komputer' }
-];
 
 const STATUS_LIST = ['Hadir', 'Sakit', 'Izin', 'Alpa'];
 
@@ -508,30 +486,70 @@ function tickClock(){
 tickClock();
 setInterval(tickClock, 1000);
 
-/* ---------------- ISI DROPDOWN DARI DAFTAR MANUAL ---------------- */
-function isiDropdownAwal(){
+/* ---------------- ISI DROPDOWN DARI SPREADSHEET ---------------- */
+async function isiDropdownAwal(){
   const selGuru = document.getElementById('inpNama');
-  DAFTAR_GURU.forEach(nama => {
-    const opt = document.createElement('option');
-    opt.value = nama; opt.textContent = nama;
-    selGuru.appendChild(opt);
-  });
-
   const selKelas = document.getElementById('selSikapKelas');
-  DAFTAR_KELAS.forEach(kk => {
-    const opt = document.createElement('option');
-    opt.value = kk; opt.textContent = kk;
-    selKelas.appendChild(opt);
-  });
 
-  const selMapel = document.getElementById('selSikapMapel');
-  DAFTAR_MAPEL.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.kode; opt.textContent = m.nama;
-    selMapel.appendChild(opt);
-  });
+  selGuru.innerHTML = '<option value="">Memuat…</option>';
+  selKelas.innerHTML = '<option value="">Memuat…</option>';
+
+  try{
+    const [resGuru, resKelas] = await Promise.all([
+      apiGet('daftarGuru', {}),
+      apiGet('daftarKelas', {})
+    ]);
+
+    selGuru.innerHTML = '<option value="">-- Pilih Nama --</option>';
+    if (resGuru.ok){
+      resGuru.data.forEach(nama => {
+        const opt = document.createElement('option');
+        opt.value = nama; opt.textContent = nama;
+        selGuru.appendChild(opt);
+      });
+    } else {
+      showMsg('loginMsg','error', resGuru.error || 'Gagal memuat daftar guru.');
+    }
+
+    selKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+    if (resKelas.ok){
+      resKelas.data.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k.kodeKelas; opt.textContent = k.kodeKelas;
+        selKelas.appendChild(opt);
+      });
+    }
+  }catch(err){
+    selGuru.innerHTML = '<option value="">Gagal memuat, muat ulang halaman</option>';
+    selKelas.innerHTML = '<option value="">Gagal memuat, muat ulang halaman</option>';
+  }
 }
 isiDropdownAwal();
+
+// Mapel tergantung kelas yang dipilih (umum + konsentrasi sesuai
+// jurusan kelas itu) — dimuat ulang setiap kali kelas berganti.
+document.getElementById('selSikapKelas').addEventListener('change', async (e) => {
+  const selMapel = document.getElementById('selSikapMapel');
+  const kodeKelas = e.target.value;
+  if (!kodeKelas){
+    selMapel.innerHTML = '<option value="">-- Pilih Kelas dulu --</option>';
+    return;
+  }
+  selMapel.innerHTML = '<option value="">Memuat…</option>';
+  try{
+    const res = await apiGet('daftarMapelKelas', { kodeKelas });
+    selMapel.innerHTML = '<option value="">-- Pilih Mapel --</option>';
+    if (res.ok){
+      res.data.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.kodeMapel; opt.textContent = m.namaMapel;
+        selMapel.appendChild(opt);
+      });
+    }
+  }catch(err){
+    selMapel.innerHTML = '<option value="">Gagal memuat mapel</option>';
+  }
+});
 
 /* ---------------- HELPERS: API ---------------- */
 async function apiGet(aksi, params){
