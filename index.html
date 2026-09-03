@@ -372,35 +372,21 @@
     </div>
 
     <div class="card hidden" id="cardSikapPilih">
-      <div class="section-title">Pilih Kelas, Mapel &amp; Periode</div>
-      <div class="section-sub">Nilai sikap dihitung per mata pelajaran untuk satu rentang periode (mis. satu bulan).</div>
+      <div class="section-title">Pilih Mata Pelajaran</div>
+      <div class="section-sub">Nilai sikap dicatat untuk hari ini. Daftar di bawah hanya menampilkan kelas &amp; mapel yang Anda ampu sesuai jadwal.</div>
       <div id="sikapPilihMsg"></div>
 
       <div class="field">
-        <label class="field-label">KELAS</label>
-        <select class="input" id="selSikapKelas">
-          <option value="">-- Pilih Kelas --</option>
+        <label class="field-label">KELAS — MATA PELAJARAN</label>
+        <select class="input" id="selSikapKelasMapel">
+          <option value="">-- Pilih Kelas & Mapel --</option>
         </select>
-      </div>
-      <div class="field">
-        <label class="field-label">MATA PELAJARAN</label>
-        <select class="input" id="selSikapMapel">
-          <option value="">-- Pilih Kelas dulu --</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">PERIODE MULAI</label>
-        <input type="date" class="input" id="inpPeriodeMulai">
-      </div>
-      <div class="field">
-        <label class="field-label">PERIODE SELESAI</label>
-        <input type="date" class="input" id="inpPeriodeSelesai">
       </div>
       <button class="btn btn-primary" id="btnMuatSiswaSikap">Muat Daftar Siswa</button>
     </div>
 
     <div class="card hidden" id="cardSikapForm">
-      <button class="back-link" id="btnBackSikapPilih">← Ganti mapel / periode</button>
+      <button class="back-link" id="btnBackSikapPilih">← Ganti mapel</button>
       <div class="kelas-meta-card">
         <div class="l1" id="sfKelasMapel">–</div>
         <div class="l2" id="sfMeta">–</div>
@@ -455,18 +441,25 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbxBtBR6nSEQVGvzAzB5NGm9
 const TOKEN = 'SMKSCALM2026';
 
 /* ================================================================
-   Daftar nama guru, kode kelas, dan mapel TIDAK ditulis manual di
-   sini — semuanya diambil langsung dari spreadsheet lewat aksi
-   'daftarGuru', 'daftarKelas', 'daftarMapelKelas' (lihat fungsi
-   isiDropdownAwal & muatMapelUntukKelasSikap di bawah). Pastikan
-   3 fungsi itu sudah ditambahkan ke file .gs Anda.
+   Daftar nama guru TIDAK ditulis manual di sini — diambil dari
+   spreadsheet lewat aksi 'daftarGuru' (lihat isiDropdownAwal). Kelas
+   & mapel Nilai Sikap juga tidak ditulis manual — diambil KHUSUS
+   milik guru yang sedang login lewat aksi 'daftarKelasMapelGuru'
+   (lihat muatKelasMapelSikap, dipanggil begitu login berhasil).
 
-   CATATAN KEAMANAN: 'jadwalGuruHariIni' & 'daftarSiswaKelas' dikirim
-   lewat POST (apiPost) beserta namaGuru+pin, BUKAN lewat GET seperti
-   3 aksi di atas — karena keduanya butuh guru sudah login (server
-   akan menolak kalau PIN tidak cocok). Jangan diubah balik ke apiGet
-   tanpa pin, itu sengaja diperbaiki supaya jadwal/daftar siswa tidak
-   bisa diintip orang lain hanya bermodal nama guru/kode kelas.
+   PERUBAHAN NILAI SIKAP (lihat chat): guru tidak lagi pilih Kelas +
+   Mapel terpisah (dropdown-nya sekarang cuma 1, berisi kombinasi
+   yang memang diampu guru ybs) dan TIDAK LAGI pilih Periode Mulai/
+   Selesai manual — nilai dicatat untuk HARI INI saja, tanggalnya
+   dihitung server (bukan dikirim dari sini) supaya tidak bisa
+   dimanipulasi. Rata-rata bulanan dihitung otomatis oleh Akademik.gs
+   dari kumpulan entri harian ini saat rekap/PDF dibuat.
+
+   CATATAN KEAMANAN: 'jadwalGuruHariIni', 'daftarSiswaKelas', dan
+   'daftarKelasMapelGuru' dikirim lewat POST (apiPost) beserta
+   namaGuru+pin, BUKAN lewat GET — karena ketiganya butuh guru sudah
+   login (server menolak kalau PIN tidak cocok). Jangan diubah balik
+   ke apiGet tanpa pin.
    ================================================================ */
 
 const STATUS_LIST = ['Hadir', 'Sakit', 'Izin', 'Alpa'];
@@ -496,17 +489,9 @@ setInterval(tickClock, 1000);
 /* ---------------- ISI DROPDOWN DARI SPREADSHEET ---------------- */
 async function isiDropdownAwal(){
   const selGuru = document.getElementById('inpNama');
-  const selKelas = document.getElementById('selSikapKelas');
-
   selGuru.innerHTML = '<option value="">Memuat…</option>';
-  selKelas.innerHTML = '<option value="">Memuat…</option>';
-
   try{
-    const [resGuru, resKelas] = await Promise.all([
-      apiGet('daftarGuru', {}),
-      apiGet('daftarKelas', {})
-    ]);
-
+    const resGuru = await apiGet('daftarGuru', {});
     selGuru.innerHTML = '<option value="">-- Pilih Nama --</option>';
     if (resGuru.ok){
       resGuru.data.forEach(nama => {
@@ -517,46 +502,41 @@ async function isiDropdownAwal(){
     } else {
       showMsg('loginMsg','error', resGuru.error || 'Gagal memuat daftar guru.');
     }
-
-    selKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-    if (resKelas.ok){
-      resKelas.data.forEach(k => {
-        const opt = document.createElement('option');
-        opt.value = k.kodeKelas; opt.textContent = k.kodeKelas;
-        selKelas.appendChild(opt);
-      });
-    }
   }catch(err){
     selGuru.innerHTML = '<option value="">Gagal memuat, muat ulang halaman</option>';
-    selKelas.innerHTML = '<option value="">Gagal memuat, muat ulang halaman</option>';
   }
 }
 isiDropdownAwal();
 
-// Mapel tergantung kelas yang dipilih (umum + konsentrasi sesuai
-// jurusan kelas itu) — dimuat ulang setiap kali kelas berganti.
-document.getElementById('selSikapKelas').addEventListener('change', async (e) => {
-  const selMapel = document.getElementById('selSikapMapel');
-  const kodeKelas = e.target.value;
-  if (!kodeKelas){
-    selMapel.innerHTML = '<option value="">-- Pilih Kelas dulu --</option>';
-    return;
-  }
-  selMapel.innerHTML = '<option value="">Memuat…</option>';
+// PERUBAHAN: dropdown Nilai Sikap sekarang hanya berisi kombinasi
+// kelas+mapel yang MEMANG diampu guru yang sedang login (bukan semua
+// mapel di suatu kelas) — dimuat lewat aksi 'daftarKelasMapelGuru'
+// begitu guru berhasil login (lihat doLogin), bukan di awal halaman,
+// karena aksi ini butuh namaGuru+pin.
+async function muatKelasMapelSikap(){
+  const sel = document.getElementById('selSikapKelasMapel');
+  sel.innerHTML = '<option value="">Memuat…</option>';
   try{
-    const res = await apiGet('daftarMapelKelas', { kodeKelas });
-    selMapel.innerHTML = '<option value="">-- Pilih Mapel --</option>';
-    if (res.ok){
-      res.data.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.kodeMapel; opt.textContent = m.namaMapel;
-        selMapel.appendChild(opt);
-      });
+    const res = await apiPost('daftarKelasMapelGuru', { namaGuru: state.namaGuru, pin: state.pin });
+    if (!res.ok){
+      sel.innerHTML = '<option value="">Gagal memuat</option>';
+      return;
     }
+    sel.innerHTML = '<option value="">-- Pilih Kelas & Mapel --</option>';
+    if (!res.data.length){
+      sel.innerHTML = '<option value="">Tidak ada jadwal mengajar tercatat</option>';
+      return;
+    }
+    res.data.forEach(km => {
+      const opt = document.createElement('option');
+      opt.value = `${km.kodeKelas}||${km.kodeMapel}`;
+      opt.textContent = `${km.kodeKelas} — ${km.namaMapel}`;
+      sel.appendChild(opt);
+    });
   }catch(err){
-    selMapel.innerHTML = '<option value="">Gagal memuat mapel</option>';
+    sel.innerHTML = '<option value="">Gagal memuat, coba lagi</option>';
   }
-});
+}
 
 /* ---------------- HELPERS: API ---------------- */
 async function apiGet(aksi, params){
@@ -626,6 +606,7 @@ async function doLogin(){
     document.getElementById('cardLogin').classList.add('hidden');
     document.getElementById('cardJadwal').classList.remove('hidden');
     await loadJadwal();
+    muatKelasMapelSikap(); // tidak perlu ditunggu (await) — tab Sikap baru dibuka belakangan
   }catch(err){
     showMsg('loginMsg','error','Tidak bisa menghubungi server. Periksa koneksi internet Anda.');
   }finally{
@@ -639,6 +620,7 @@ document.getElementById('btnLogout').addEventListener('click', () => {
   document.getElementById('cardJadwal').classList.add('hidden');
   document.getElementById('cardPresensiForm').classList.add('hidden');
   document.getElementById('cardLogin').classList.remove('hidden');
+  document.getElementById('selSikapKelasMapel').innerHTML = '<option value="">-- Pilih Kelas & Mapel --</option>';
   refreshSikapGate();
 });
 
@@ -791,32 +773,35 @@ function refreshSikapGate(){
 }
 
 document.getElementById('btnMuatSiswaSikap').addEventListener('click', async () => {
-  const kodeKelas = document.getElementById('selSikapKelas').value;
-  const kodeMapel = document.getElementById('selSikapMapel').value;
-  const namaMapelTerpilih = document.getElementById('selSikapMapel').selectedOptions[0]
-    ? document.getElementById('selSikapMapel').selectedOptions[0].textContent : '';
-  const mulai = document.getElementById('inpPeriodeMulai').value;
-  const selesai = document.getElementById('inpPeriodeSelesai').value;
+  const gabungan = document.getElementById('selSikapKelasMapel').value;
   clearMsg('sikapPilihMsg');
-  if (!kodeKelas || !kodeMapel){ showMsg('sikapPilihMsg','error','Pilih kelas dan mata pelajaran terlebih dahulu.'); return; }
-  if (!mulai || !selesai){ showMsg('sikapPilihMsg','error','Isi periode mulai dan selesai.'); return; }
+  if (!gabungan){ showMsg('sikapPilihMsg','error','Pilih kelas & mata pelajaran terlebih dahulu.'); return; }
+  const [kodeKelas, kodeMapel] = gabungan.split('||');
+  const namaMapelTerpilih = document.getElementById('selSikapKelasMapel').selectedOptions[0].textContent;
   showMsg('sikapPilihMsg','loading','Memuat daftar siswa…');
   try{
     const res = await apiPost('daftarSiswaKelas', { kodeKelas, namaGuru: state.namaGuru, pin: state.pin });
     if (!res.ok){ showMsg('sikapPilihMsg','error', res.error || 'Gagal memuat siswa.'); return; }
     clearMsg('sikapPilihMsg');
-    state.sesiSikap = { kodeKelas, kodeMapel, periodeMulai: mulai, periodeSelesai: selesai,
-      namaMapel: namaMapelTerpilih };
+    state.sesiSikap = { kodeKelas, kodeMapel, namaMapel: namaMapelTerpilih };
     state.siswaSikap = res.data.map(s => ({ nis: s.nis, nama: s.nama, nilai: '' }));
     document.getElementById('cardSikapPilih').classList.add('hidden');
     document.getElementById('cardSikapForm').classList.remove('hidden');
-    document.getElementById('sfKelasMapel').textContent = `${kodeKelas} — ${state.sesiSikap.namaMapel}`;
-    document.getElementById('sfMeta').textContent = `Periode ${mulai} s/d ${selesai}`;
+    document.getElementById('sfKelasMapel').textContent = namaMapelTerpilih;
+    document.getElementById('sfMeta').textContent = `Nilai sikap untuk hari ini, ${tanggalHariIniIndo()}`;
     renderSikapForm();
   }catch(err){
     showMsg('sikapPilihMsg','error','Tidak bisa menghubungi server.');
   }
 });
+
+// Dipakai untuk label "Nilai sikap untuk hari ini, ..." di form —
+// murni tampilan; tanggal yang disimpan ke server tetap dihitung
+// sendiri oleh Akademik.gs supaya tidak bisa dimanipulasi klien.
+function tanggalHariIniIndo(){
+  const d = new Date();
+  return `${d.getDate()} ${BULAN_ID[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 function renderSikapForm(){
   const wrap = document.getElementById('sfSiswaList');
@@ -860,9 +845,8 @@ document.getElementById('btnSubmitSikap').addEventListener('click', async () => 
     const res = await apiPost('submitNilaiSikap', {
       namaGuru: state.namaGuru,
       pin: state.pin,
+      kodeKelas: state.sesiSikap.kodeKelas,
       kodeMapel: state.sesiSikap.kodeMapel,
-      periodeMulai: state.sesiSikap.periodeMulai,
-      periodeSelesai: state.sesiSikap.periodeSelesai,
       daftarNilai
     });
     if (!res.ok){ showMsg('sfMsg','error', res.error || 'Gagal menyimpan nilai.'); return; }
