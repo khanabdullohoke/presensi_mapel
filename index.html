@@ -460,6 +460,13 @@ const TOKEN = 'SMKSCALM2026';
    'daftarGuru', 'daftarKelas', 'daftarMapelKelas' (lihat fungsi
    isiDropdownAwal & muatMapelUntukKelasSikap di bawah). Pastikan
    3 fungsi itu sudah ditambahkan ke file .gs Anda.
+
+   CATATAN KEAMANAN: 'jadwalGuruHariIni' & 'daftarSiswaKelas' dikirim
+   lewat POST (apiPost) beserta namaGuru+pin, BUKAN lewat GET seperti
+   3 aksi di atas — karena keduanya butuh guru sudah login (server
+   akan menolak kalau PIN tidak cocok). Jangan diubah balik ke apiGet
+   tanpa pin, itu sengaja diperbaiki supaya jadwal/daftar siswa tidak
+   bisa diintip orang lain hanya bermodal nama guru/kode kelas.
    ================================================================ */
 
 const STATUS_LIST = ['Hadir', 'Sakit', 'Izin', 'Alpa'];
@@ -640,7 +647,7 @@ async function loadJadwal(){
   clearMsg('jadwalMsg');
   showMsg('jadwalMsg','loading','Memuat jadwal…');
   try{
-    const res = await apiGet('jadwalGuruHariIni', { namaGuru: state.namaGuru });
+    const res = await apiPost('jadwalGuruHariIni', { namaGuru: state.namaGuru, pin: state.pin });
     if (!res.ok){ showMsg('jadwalMsg','error', res.error || 'Gagal memuat jadwal.'); return; }
     clearMsg('jadwalMsg');
     state.jadwal = res.data.jadwal || [];
@@ -689,7 +696,7 @@ async function bukaFormPresensi(jadwalItem){
   showMsg('pfMsg','loading','Memuat daftar siswa…');
   document.getElementById('pfSiswaList').innerHTML = '';
   try{
-    const res = await apiGet('daftarSiswaKelas', { kodeKelas: jadwalItem.kodeKelas });
+    const res = await apiPost('daftarSiswaKelas', { kodeKelas: jadwalItem.kodeKelas, namaGuru: state.namaGuru, pin: state.pin });
     if (!res.ok){ showMsg('pfMsg','error', res.error || 'Gagal memuat siswa.'); return; }
     clearMsg('pfMsg');
     state.siswaPresensi = res.data.map(s => ({ nis: s.nis, nama: s.nama, status: 'Hadir', catatan: '' }));
@@ -795,7 +802,7 @@ document.getElementById('btnMuatSiswaSikap').addEventListener('click', async () 
   if (!mulai || !selesai){ showMsg('sikapPilihMsg','error','Isi periode mulai dan selesai.'); return; }
   showMsg('sikapPilihMsg','loading','Memuat daftar siswa…');
   try{
-    const res = await apiGet('daftarSiswaKelas', { kodeKelas });
+    const res = await apiPost('daftarSiswaKelas', { kodeKelas, namaGuru: state.namaGuru, pin: state.pin });
     if (!res.ok){ showMsg('sikapPilihMsg','error', res.error || 'Gagal memuat siswa.'); return; }
     clearMsg('sikapPilihMsg');
     state.sesiSikap = { kodeKelas, kodeMapel, periodeMulai: mulai, periodeSelesai: selesai,
