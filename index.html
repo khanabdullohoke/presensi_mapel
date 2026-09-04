@@ -570,7 +570,7 @@
 
     <div class="card hidden" id="cardSikapPilih">
       <div class="section-title">Pilih Mata Pelajaran</div>
-      <div class="section-sub">Nilai sikap dicatat untuk hari ini. Daftar di bawah hanya menampilkan kelas &amp; mapel yang Anda ampu sesuai jadwal.</div>
+      <div class="section-sub">Nilai sikap dicatat untuk hari ini. Daftar di bawah hanya menampilkan kelas &amp; mapel yang Anda ampu sesuai jadwal <strong>hari ini</strong>.</div>
       <div id="sikapPilihMsg"></div>
 
       <div class="field">
@@ -717,6 +717,16 @@ const TOKEN = 'SMKSCALM2026';
    milik guru yang sedang login lewat aksi 'daftarKelasMapelGuru'
    (lihat muatKelasMapelSikap, dipanggil begitu login berhasil).
 
+   PERUBAHAN (lihat chat): dropdown "Kelas — Mata Pelajaran" di tab
+   Nilai Sikap SEKARANG HANYA menampilkan kombinasi kelas+mapel yang
+   MEMANG terjadwal HARI INI untuk guru yang login (hari + blok minggu
+   A/B aktif dicek di server, sama seperti jadwal di tab Presensi).
+   Kombinasi yang bukan jadwal hari ini TIDAK ikut muncul lagi — jadi
+   kalau dropdown kosong / cuma "Tidak ada jadwal mengajar hari ini",
+   itu tandanya guru tsb memang tidak mengajar apa pun hari ini, bukan
+   error. Ini diproses backend (getDaftarKelasMapelGuru di Akademik.gs)
+   sehingga tidak perlu filter tambahan di sisi klien.
+
    PERUBAHAN NILAI SIKAP (lihat chat): guru tidak lagi pilih Kelas +
    Mapel terpisah (dropdown-nya sekarang cuma 1, berisi kombinasi
    yang memang diampu guru ybs) dan TIDAK LAGI pilih Periode Mulai/
@@ -729,7 +739,10 @@ const TOKEN = 'SMKSCALM2026';
    'daftarKelasMapelGuru' dikirim lewat POST (apiPost) beserta
    namaGuru+pin, BUKAN lewat GET — karena ketiganya butuh guru sudah
    login (server menolak kalau PIN tidak cocok). Jangan diubah balik
-   ke apiGet tanpa pin.
+   ke apiGet tanpa pin. Tanggal untuk 'daftarKelasMapelGuru' juga
+   SENGAJA tidak dikirim dari sini (server selalu pakai tanggal hari
+   ini sendiri) — sama seperti submitNilaiSikap, supaya tidak bisa
+   dimanipulasi dari browser untuk memunculkan jadwal hari lain.
    ================================================================ */
 
 const STATUS_LIST = ['Hadir', 'Sakit', 'Izin', 'Alpa'];
@@ -779,10 +792,13 @@ async function isiDropdownAwal(){
 isiDropdownAwal();
 
 // PERUBAHAN: dropdown Nilai Sikap sekarang hanya berisi kombinasi
-// kelas+mapel yang MEMANG diampu guru yang sedang login (bukan semua
-// mapel di suatu kelas) — dimuat lewat aksi 'daftarKelasMapelGuru'
-// begitu guru berhasil login (lihat doLogin), bukan di awal halaman,
-// karena aksi ini butuh namaGuru+pin.
+// kelas+mapel yang MEMANG diampu guru yang sedang login DAN yang
+// terjadwal HARI INI (server yang memfilter hari + blok minggu A/B
+// aktif — lihat getDaftarKelasMapelGuru di Akademik.gs; tidak ada
+// tanggal dikirim dari sini, server selalu pakai tanggal server
+// sendiri) — dimuat lewat aksi 'daftarKelasMapelGuru' begitu guru
+// berhasil login (lihat doLogin), bukan di awal halaman, karena aksi
+// ini butuh namaGuru+pin.
 async function muatKelasMapelSikap(){
   const sel = document.getElementById('selSikapKelasMapel');
   sel.innerHTML = '<option value="">Memuat…</option>';
@@ -794,7 +810,10 @@ async function muatKelasMapelSikap(){
     }
     sel.innerHTML = '<option value="">-- Pilih Kelas & Mapel --</option>';
     if (!res.data.length){
-      sel.innerHTML = '<option value="">Tidak ada jadwal mengajar tercatat</option>';
+      // Guru ini memang tidak punya jadwal mengajar HARI INI (bukan
+      // error) — beda dari pesan generik versi sebelumnya supaya
+      // tidak disangka bug ketika dropdown kosong.
+      sel.innerHTML = '<option value="">Tidak ada jadwal mengajar hari ini</option>';
       return;
     }
     res.data.forEach(km => {
