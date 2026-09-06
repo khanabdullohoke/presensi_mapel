@@ -915,6 +915,18 @@ document.getElementById('btnLogout').addEventListener('click', () => {
 });
 
 /* ---------------- JADWAL HARI INI ---------------- */
+// PERBAIKAN: urutkan daftar jadwal berdasarkan jam ke- (ascending),
+// bukan mengikuti urutan mentah dari server. Jam ke bisa berupa
+// rentang ("1-4", "9-10") atau angka tunggal ("11") — yang dipakai
+// untuk pengurutan adalah angka JAM MULAI-nya saja.
+function jamAwal(jamKe){
+  const angka = String(jamKe ?? '').match(/\d+/);
+  return angka ? parseInt(angka[0], 10) : 9999; // data tak dikenal ditaruh di akhir, bukan error
+}
+function urutkanJadwal(daftar){
+  return [...daftar].sort((a, b) => jamAwal(a.jamKe) - jamAwal(b.jamKe));
+}
+
 async function loadJadwal(){
   clearMsg('jadwalMsg');
   showMsg('jadwalMsg','loading','Memuat jadwal…');
@@ -922,7 +934,7 @@ async function loadJadwal(){
     const res = await apiPost('jadwalGuruHariIni', { namaGuru: state.namaGuru, pin: state.pin });
     if (!res.ok){ showMsg('jadwalMsg','error', res.error || 'Gagal memuat jadwal.'); return; }
     clearMsg('jadwalMsg');
-    state.jadwal = res.data.jadwal || [];
+    state.jadwal = urutkanJadwal(res.data.jadwal || []);
     document.getElementById('jadwalSub').textContent =
       `${res.data.hari}, ${res.data.tanggal} — ${state.namaGuru}`;
     renderJadwalList();
