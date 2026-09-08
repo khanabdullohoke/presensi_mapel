@@ -484,7 +484,7 @@
 <nav class="tabs">
   <div class="tabs-inner">
     <button class="tab-btn active" data-tab="presensi">Presensi</button>
-    <button class="tab-btn" data-tab="sikap">Nilai Sikap</button>
+    <button class="tab-btn" data-tab="sikap">Input Nilai</button>
     <button class="tab-btn" data-tab="info">Info &amp; Ketentuan</button>
     <button class="tab-btn" data-tab="faq">FAQ</button>
   </div>
@@ -560,18 +560,27 @@
 
   </section>
 
-  <!-- ================= TAB: NILAI SIKAP ================= -->
+  <!-- ================= TAB: INPUT NILAI (Sikap / Pengetahuan / Keterampilan) ================= -->
   <section id="tab-sikap" class="hidden">
 
     <div class="card" id="cardSikapGate">
-      <div class="section-title">Nilai Sikap per Mapel</div>
-      <div class="section-sub">Masuk di tab <b>Presensi</b> terlebih dahulu untuk mengisi nilai sikap.</div>
+      <div class="section-title">Input Nilai per Mapel</div>
+      <div class="section-sub">Masuk di tab <b>Presensi</b> terlebih dahulu untuk mengisi nilai Sikap, Pengetahuan, atau Keterampilan.</div>
     </div>
 
     <div class="card hidden" id="cardSikapPilih">
-      <div class="section-title">Pilih Mata Pelajaran</div>
-      <div class="section-sub">Nilai sikap dicatat untuk hari ini. Daftar di bawah hanya menampilkan kelas &amp; mapel yang Anda ampu sesuai jadwal <strong>hari ini</strong>.</div>
+      <div class="section-title">Pilih Jenis Nilai &amp; Mata Pelajaran</div>
+      <div class="section-sub">Nilai dicatat untuk hari ini. Daftar kelas &amp; mapel di bawah hanya menampilkan yang Anda ampu sesuai jadwal <strong>hari ini</strong>.</div>
       <div id="sikapPilihMsg"></div>
+
+      <div class="field">
+        <label class="field-label">JENIS NILAI</label>
+        <select class="input" id="selJenisNilai">
+          <option value="Sikap">Sikap</option>
+          <option value="Pengetahuan">Pengetahuan</option>
+          <option value="Keterampilan">Keterampilan</option>
+        </select>
+      </div>
 
       <div class="field">
         <label class="field-label">KELAS — MATA PELAJARAN</label>
@@ -590,12 +599,12 @@
       </div>
       <div id="sfMsg"></div>
       <div id="sfSiswaList"></div>
-      <button class="btn btn-primary" style="margin-top:16px;" id="btnSubmitSikap">Simpan Nilai Sikap</button>
+      <button class="btn btn-primary" style="margin-top:16px;" id="btnSubmitSikap">Simpan Nilai</button>
     </div>
 
     <div class="card hidden" id="cardSikapDone">
       <div class="done-icon">✅</div>
-      <div class="section-title" style="text-align:center;" id="doneTitle">Nilai Sikap Tersimpan</div>
+      <div class="section-title" style="text-align:center;" id="doneTitle">Nilai Tersimpan</div>
       <div class="section-sub" style="text-align:center;margin-bottom:20px;" id="doneSub">–</div>
       <div class="btn-row">
         <button class="btn btn-ghost" id="btnGantiMapelSikap">Ganti Mapel</button>
@@ -609,7 +618,7 @@
   <section id="tab-info" class="hidden">
     <div class="card">
       <div class="section-title">Kategori Gabungan Kemampuan</div>
-      <div class="section-sub">Kategori pada laporan kumulatif dihitung dari rata-rata nilai sikap. Ambang batas berikut bersifat sementara dan dapat disesuaikan oleh admin sekolah.</div>
+      <div class="section-sub">Kategori pada laporan kumulatif dihitung dari "Nilai Akhir" per mapel, yaitu rata-rata gabungan nilai Sikap, Pengetahuan, dan Keterampilan yang sudah pernah diinput untuk mapel tsb. Ambang batas berikut bersifat sementara dan dapat disesuaikan oleh admin sekolah.</div>
       <table class="table-info">
         <tr><th>Nilai</th><th>Kategori</th></tr>
         <tr><td>≥ 80</td><td>Istimewa</td></tr>
@@ -633,7 +642,7 @@
       <div class="hint" style="margin-top:10px;">Keputusan akhir kenaikan kelas/kelulusan tetap ditentukan melalui rapat dewan guru — tabel ini bersifat indikatif untuk pembinaan dini, bukan keputusan otomatis.</div>
     </div>
 
-    <div class="footnote">Presensi tercatat dengan token akses &amp; PIN pribadi guru. Sistem ini terpisah dari presensi staf/guru dan hanya mengelola data akademik (jadwal, presensi mapel, nilai sikap).</div>
+    <div class="footnote">Presensi tercatat dengan token akses &amp; PIN pribadi guru. Sistem ini terpisah dari presensi staf/guru dan hanya mengelola data akademik (jadwal, presensi mapel, nilai Sikap/Pengetahuan/Keterampilan).</div>
   </section>
 
   <!-- ================= TAB: FAQ ================= -->
@@ -641,7 +650,7 @@
     <div class="card">
       <span class="faq-badge">🙋 PERTANYAAN UMUM</span>
       <div class="section-title">Frequently Asked Questions</div>
-      <div class="section-sub">Kumpulan pertanyaan yang paling sering ditanyakan guru mapel seputar login, presensi, dan nilai sikap.</div>
+      <div class="section-sub">Kumpulan pertanyaan yang paling sering ditanyakan guru mapel seputar login, presensi, dan input nilai.</div>
       <div id="faqList"></div>
     </div>
     <div class="footnote">Tidak menemukan jawaban yang Anda cari? Hubungi admin sekolah melalui kontak yang tertera pada menu <b style="color:var(--navy-700);">Atur Ulang PIN</b>.</div>
@@ -734,6 +743,19 @@ const TOKEN = 'SMKSCALM2026';
    dihitung server (bukan dikirim dari sini) supaya tidak bisa
    dimanipulasi. Rata-rata bulanan dihitung otomatis oleh Akademik.gs
    dari kumpulan entri harian ini saat rekap/PDF dibuat.
+
+   TAMBAHAN — NILAI PENGETAHUAN & KETERAMPILAN: tab "Nilai Sikap" di
+   atas sekarang menjadi tab "Input Nilai" yang generik untuk 3 jenis
+   nilai (Sikap / Pengetahuan / Keterampilan), dipilih lewat dropdown
+   baru #selJenisNilai. Struktur & alur form (pilih jenis+mapel → muat
+   siswa → isi angka 0-100 → simpan) TIDAK berubah — hanya `jenisNilai`
+   yang sekarang ikut dikirim ke server lewat aksi 'submitNilai' (aksi
+   lama 'submitNilaiSikap' masih didukung di backend sebagai alias demi
+   kompatibilitas, tapi frontend ini sekarang selalu memakai 'submitNilai').
+   Variabel state (state.sesiSikap, state.siswaSikap) dan ID elemen DOM
+   (cardSikap*, selSikapKelasMapel, dst.) sengaja TIDAK diganti nama
+   supaya CSS/struktur visual yang sudah ada tidak perlu disentuh —
+   makna field-nya saja yang sekarang generik, bukan sikap-only lagi.
 
    CATATAN KEAMANAN: 'jadwalGuruHariIni', 'daftarSiswaKelas', dan
    'daftarKelasMapelGuru' dikirim lewat POST (apiPost) beserta
@@ -911,6 +933,7 @@ document.getElementById('btnLogout').addEventListener('click', () => {
   document.getElementById('cardPresensiForm').classList.add('hidden');
   document.getElementById('cardLogin').classList.remove('hidden');
   document.getElementById('selSikapKelasMapel').innerHTML = '<option value="">-- Pilih Kelas & Mapel --</option>';
+  document.getElementById('selJenisNilai').value = 'Sikap';
   refreshSikapGate();
 });
 
@@ -1059,7 +1082,7 @@ document.getElementById('btnSubmitPresensi').addEventListener('click', async () 
 });
 
 /* ================================================================
-   NILAI SIKAP
+   INPUT NILAI (Sikap / Pengetahuan / Keterampilan)
    ================================================================ */
 function refreshSikapGate(){
   const gate = document.getElementById('cardSikapGate');
@@ -1076,6 +1099,7 @@ function refreshSikapGate(){
 }
 
 document.getElementById('btnMuatSiswaSikap').addEventListener('click', async () => {
+  const jenisNilai = document.getElementById('selJenisNilai').value;
   const gabungan = document.getElementById('selSikapKelasMapel').value;
   clearMsg('sikapPilihMsg');
   if (!gabungan){ showMsg('sikapPilihMsg','error','Pilih kelas & mata pelajaran terlebih dahulu.'); return; }
@@ -1086,12 +1110,16 @@ document.getElementById('btnMuatSiswaSikap').addEventListener('click', async () 
     const res = await apiPost('daftarSiswaKelas', { kodeKelas, namaGuru: state.namaGuru, pin: state.pin });
     if (!res.ok){ showMsg('sikapPilihMsg','error', res.error || 'Gagal memuat siswa.'); return; }
     clearMsg('sikapPilihMsg');
-    state.sesiSikap = { kodeKelas, kodeMapel, namaMapel: namaMapelTerpilih };
+    // jenisNilai disimpan di state.sesiSikap dan dikirim ke server saat
+    // submit (aksi 'submitNilai') — server yang menentukan sheet target
+    // (NilaiSikap / NilaiPengetahuan / NilaiKeterampilan) berdasarkan ini.
+    state.sesiSikap = { kodeKelas, kodeMapel, namaMapel: namaMapelTerpilih, jenisNilai };
     state.siswaSikap = res.data.map(s => ({ nis: s.nis, nama: s.nama, nilai: '' }));
     document.getElementById('cardSikapPilih').classList.add('hidden');
     document.getElementById('cardSikapForm').classList.remove('hidden');
-    document.getElementById('sfKelasMapel').textContent = namaMapelTerpilih;
-    document.getElementById('sfMeta').textContent = `Nilai sikap untuk hari ini, ${tanggalHariIniIndo()}`;
+    document.getElementById('sfKelasMapel').textContent = `${namaMapelTerpilih} — Nilai ${jenisNilai}`;
+    document.getElementById('sfMeta').textContent = `Nilai ${jenisNilai.toLowerCase()} untuk hari ini, ${tanggalHariIniIndo()}`;
+    document.getElementById('btnSubmitSikap').textContent = `Simpan Nilai ${jenisNilai}`;
     renderSikapForm();
   }catch(err){
     showMsg('sikapPilihMsg','error','Tidak bisa menghubungi server.');
@@ -1141,23 +1169,25 @@ document.getElementById('btnSubmitSikap').addEventListener('click', async () => 
     .map(s => ({ nis: s.nis, nilai: Number(s.nilai) }));
   clearMsg('sfMsg');
   if (!daftarNilai.length){ showMsg('sfMsg','error','Isi nilai minimal untuk satu siswa.'); return; }
-  showMsg('sfMsg','loading','Menyimpan nilai sikap…');
+  const jenisNilai = state.sesiSikap.jenisNilai;
+  showMsg('sfMsg','loading',`Menyimpan nilai ${jenisNilai.toLowerCase()}…`);
   const btn = document.getElementById('btnSubmitSikap');
   btn.disabled = true;
   try{
-    const res = await apiPost('submitNilaiSikap', {
+    const res = await apiPost('submitNilai', {
       namaGuru: state.namaGuru,
       pin: state.pin,
       kodeKelas: state.sesiSikap.kodeKelas,
       kodeMapel: state.sesiSikap.kodeMapel,
+      jenisNilai: jenisNilai,
       daftarNilai
     });
     if (!res.ok){ showMsg('sfMsg','error', res.error || 'Gagal menyimpan nilai.'); return; }
-    showMsg('sfMsg','success', res.message || 'Nilai sikap tersimpan.');
+    showMsg('sfMsg','success', res.message || 'Nilai tersimpan.');
     setTimeout(() => {
       document.getElementById('cardSikapForm').classList.add('hidden');
       document.getElementById('cardSikapDone').classList.remove('hidden');
-      document.getElementById('doneTitle').textContent = 'Nilai Sikap Tersimpan';
+      document.getElementById('doneTitle').textContent = `Nilai ${jenisNilai} Tersimpan`;
       document.getElementById('doneSub').textContent =
         `${state.sesiSikap.namaMapel} · ${daftarNilai.length} dari ${state.siswaSikap.length} siswa dinilai hari ini.`;
       clearMsg('sfMsg');
@@ -1187,6 +1217,7 @@ document.getElementById('btnGantiMapelSikap').addEventListener('click', () => {
   document.getElementById('cardSikapDone').classList.add('hidden');
   document.getElementById('cardSikapPilih').classList.remove('hidden');
   document.getElementById('selSikapKelasMapel').value = '';
+  document.getElementById('selJenisNilai').value = 'Sikap';
   clearMsg('sikapPilihMsg');
 });
 
@@ -1239,11 +1270,15 @@ const FAQ_DATA = [
     a: 'Bisa. Pada daftar jadwal, sesi yang berstatus "Sudah diisi" tetap dapat dibuka kembali lewat tombol "Ubah" untuk memperbarui status kehadiran maupun catatan siswa.'
   },
   {
-    q: 'Apa bedanya menu Presensi dengan Nilai Sikap?',
-    a: 'Presensi mencatat kehadiran siswa (Hadir/Sakit/Izin/Alpa) per sesi mengajar. Nilai Sikap mencatat penilaian sikap harian (0–100) untuk kelas & mapel yang Anda ampu, dan hanya bisa diisi setelah login di tab Presensi.'
+    q: 'Apa bedanya menu Presensi dengan Input Nilai?',
+    a: 'Presensi mencatat kehadiran siswa (Hadir/Sakit/Izin/Alpa) per sesi mengajar. Input Nilai mencatat nilai harian (0–100) untuk kelas & mapel yang Anda ampu — pilih dulu jenisnya (Sikap, Pengetahuan, atau Keterampilan) sebelum memilih siswa. Menu ini hanya bisa diisi setelah login di tab Presensi.'
   },
   {
-    q: 'Bagaimana tanggal presensi & nilai sikap ditentukan?',
+    q: 'Apa bedanya Nilai Sikap, Pengetahuan, dan Keterampilan?',
+    a: 'Ketiganya dicatat terpisah dengan cara input yang sama (0–100 per siswa, per hari). Sikap menilai disiplin & perilaku, Pengetahuan menilai pemahaman materi, dan Keterampilan menilai praktik/kinerja siswa. Pada laporan kumulatif, ketiganya digabung menjadi satu "Nilai Akhir" per mata pelajaran.'
+  },
+  {
+    q: 'Bagaimana tanggal presensi & nilai ditentukan?',
     a: 'Tanggal dihitung otomatis oleh server saat data disimpan, bukan diambil dari perangkat guru. Ini memastikan catatan tidak dapat dimanipulasi dan selalu sesuai waktu sebenarnya data dikirim.'
   },
   {
